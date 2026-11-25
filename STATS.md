@@ -4,6 +4,7 @@ Log of historical IP counts for all generated text lists recorded during every a
 
 | Timestamp (UTC) | Relays | Relays v4 | Relays v6 | Exits | Exits v4 | Exits v6 | Non-Exits | Non-Exits v4 | Non-Exits v6 | Off Relays | Off Relays v4 | Off Relays v6 | Off Exits | Off Exits v4 | Off Exits v6 | Off Non-Exits | Off Non-Exits v4 | Off Non-Exits v6 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-11-25 14:31:54 UTC | 9390 | 7017 | 2373 | 1641 | 1250 | 391 | 7856 | 5862 | 1994 | 937 | 716 | 221 | 207 | 160 | 47 | 732 | 557 | 175 |
 | 2026-11-25 14:08:51 UTC | 9390 | 7017 | 2373 | 1641 | 1250 | 391 | 7856 | 5862 | 1994 | 937 | 716 | 221 | 207 | 160 | 47 | 732 | 557 | 175 |
 | 2026-11-25 13:03:05 UTC | 9379 | 7015 | 2364 | 1640 | 1249 | 391 | 7846 | 5861 | 1985 | 951 | 719 | 232 | 207 | 161 | 46 | 746 | 559 | 187 |
 | 2026-11-25 11:51:13 UTC | 9376 | 7009 | 2367 | 1636 | 1246 | 390 | 7847 | 5858 | 1989 | 948 | 721 | 227 | 209 | 163 | 46 | 741 | 559 | 182 |
