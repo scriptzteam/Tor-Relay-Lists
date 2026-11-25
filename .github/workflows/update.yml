@@ -21,7 +21,7 @@ jobs:
         run: |
           git config --local user.email "scriptzteam@gmail.com"
           git config --local user.name "scriptzteam"
-          git add -f relays*.txt exits*.txt offline*.txt non*.txt onionoo_details.json.gz *.md
+          git add -f relays*.txt exits*.txt offline*.txt non*.txt onionoo_details.json.gz *.md .last_modified
           if ! git diff --cached --quiet; then
             echo "Changes detected, committing..."
             git commit -m "Update Tor relays and exit lists"
