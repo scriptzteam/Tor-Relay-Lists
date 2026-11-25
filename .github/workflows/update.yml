@@ -1,0 +1,31 @@
+name: Update Tor Relays Data
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Run every 30 minutes
+  workflow_dispatch:     # Allow manual trigger
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Update Tor lists
+        run: bash tor.sh
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "scriptzteam@gmail.com"
+          git config --local user.name "scriptzteam"
+          git add -f relays*.txt exits*.txt onionoo_details.json.gz README.md
+          if ! git diff --cached --quiet; then
+            echo "Changes detected, committing..."
+            git commit -m "Update Tor relays and exit lists"
+            git push
+          else
+            echo "No changes to commit"
+          fi
