@@ -145,7 +145,7 @@ $NEW_STAT_ROW
 EOF
 else
   awk -v new_row="$NEW_STAT_ROW" '
-    NR==4 {print new_row}
+    NR==6 {print new_row}
     {print}
   ' "$STATS_MD" > stats_tmp.md && mv stats_tmp.md "$STATS_MD"
 fi
