@@ -16,7 +16,6 @@ curl -sL "$ONIONOO_URL" | tee >(gzip -9 > "${PREFIX}onionoo_details.json.gz") > 
 
 echo "[*] Parsing running and offline nodes..."
 
-# Parse online and offline relays/exits separately into two temp files
 jq -r '
   .relays[] | 
   (.running // false) as $running |
@@ -68,7 +67,11 @@ COUNT_EXITS_V6=$(wc -l < "${PREFIX}exits_v6.txt" | tr -d ' ')
 
 # Counts: Offline
 COUNT_OFFLINE_RELAYS=$(wc -l < "${PREFIX}offline_relays.txt" | tr -d ' ')
+COUNT_OFFLINE_RELAYS_V4=$(wc -l < "${PREFIX}offline_relays_v4.txt" | tr -d ' ')
+COUNT_OFFLINE_RELAYS_V6=$(wc -l < "${PREFIX}offline_relays_v6.txt" | tr -d ' ')
 COUNT_OFFLINE_EXITS=$(wc -l < "${PREFIX}offline_exits.txt" | tr -d ' ')
+COUNT_OFFLINE_EXITS_V4=$(wc -l < "${PREFIX}offline_exits_v4.txt" | tr -d ' ')
+COUNT_OFFLINE_EXITS_V6=$(wc -l < "${PREFIX}offline_exits_v6.txt" | tr -d ' ')
 
 GZ_SIZE_HR=$(du -h "${PREFIX}onionoo_details.json.gz" | awk '{print $1}')
 GZ_SIZE_BYTES=$(wc -c < "${PREFIX}onionoo_details.json.gz" | tr -d ' ')
@@ -93,7 +96,11 @@ Automatically generated and updated list of online and offline Tor network relay
 | \`exits_v4.txt\` | Online exit nodes (IPv4 only) | IPv4 | Online | \`$COUNT_EXITS_V4\` |
 | \`exits_v6.txt\` | Online exit nodes (IPv6 only) | IPv6 | Online | \`$COUNT_EXITS_V6\` |
 | \`offline_relays.txt\` | All offline Tor relays | IPv4 & IPv6 | Offline | \`$COUNT_OFFLINE_RELAYS\` |
+| \`offline_relays_v4.txt\` | Offline relays (IPv4 only) | IPv4 | Offline | \`$COUNT_OFFLINE_RELAYS_V4\` |
+| \`offline_relays_v6.txt\` | Offline relays (IPv6 only) | IPv6 | Offline | \`$COUNT_OFFLINE_RELAYS_V6\` |
 | \`offline_exits.txt\` | All offline Tor exit nodes | IPv4 & IPv6 | Offline | \`$COUNT_OFFLINE_EXITS\` |
+| \`offline_exits_v4.txt\` | Offline exit nodes (IPv4 only) | IPv4 | Offline | \`$COUNT_OFFLINE_EXITS_V4\` |
+| \`offline_exits_v6.txt\` | Offline exit nodes (IPv6 only) | IPv6 | Offline | \`$COUNT_OFFLINE_EXITS_V6\` |
 | \`onionoo_details.json.gz\` | Full compressed raw Onionoo payload | JSON / Gzip (Level 9) | N/A | N/A |
 
 ## 🛠️ Usage Example
@@ -103,4 +110,4 @@ grep -Fxq "192.0.2.1" exits.txt && echo "Matched Tor Exit!"
 \`\`\`
 EOF
 
-echo "[+] Success! Files and README.md generated with offline stats."
+echo "[+] Success! Files and README.md generated with all offline stats."
