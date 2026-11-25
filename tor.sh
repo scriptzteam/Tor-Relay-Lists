@@ -12,13 +12,49 @@ else
 fi
 
 STATS_MD="${PREFIX}STATS.md"
+GZ_FILE="${PREFIX}onionoo_details.json.gz"
+CACHE_FILE="${PREFIX}.last_modified"
+HEADERS_FILE="${PREFIX}headers.tmp"
+TEMP_RAW="${PREFIX}onionoo_raw.tmp"
 
-echo "[*] Downloading Onionoo details..."
-curl -sL "$ONIONOO_URL" | tee >(gzip -9 > "${PREFIX}onionoo_details.json.gz") > onionoo_raw.json
+# Prepare curl arguments (--compressed handles Accept-Encoding: gzip and auto-decompression)
+CURL_ARGS=("-sL" "-D" "$HEADERS_FILE" "-w" "%{http_code}" "--compressed" "-o" "$TEMP_RAW")
+
+# If both the gz file and timestamp cache exist, add the If-Modified-Since header
+if [ -f "$GZ_FILE" ] && [ -f "$CACHE_FILE" ]; then
+  LAST_MODIFIED_VAL=$(cat "$CACHE_FILE")
+  echo "[*] Checking Onionoo for updates (If-Modified-Since: $LAST_MODIFIED_VAL)..."
+  CURL_ARGS+=("-H" "If-Modified-Since: $LAST_MODIFIED_VAL")
+else
+  echo "[*] No local cache found. Downloading fresh Onionoo details..."
+fi
+
+# Execute curl and capture the HTTP status code
+HTTP_CODE=$(curl "${CURL_ARGS[@]}" "$ONIONOO_URL")
+
+if [ "$HTTP_CODE" -eq 304 ]; then
+  echo "[*] Onionoo data is not modified (304 Not Modified). Stopping execution."
+  rm -f "$TEMP_RAW" "$HEADERS_FILE"
+  exit 0
+elif [ "$HTTP_CODE" -eq 200 ]; then
+  echo "[*] New data available (200 OK). Compressing and updating cache..."
+  
+  # Compress and save to target gz file while keeping a copy or raw stream for processing
+  gzip -9 < "$TEMP_RAW" > "$GZ_FILE"
+  
+  # Extract and save the new Last-Modified header value
+  grep -i "^Last-Modified:" "$HEADERS_FILE" | cut -d' ' -f2- | tr -d '\r' > "$CACHE_FILE"
+  rm -f "$HEADERS_FILE"
+else
+  echo "[!] Unexpected HTTP status code: $HTTP_CODE"
+  rm -f "$TEMP_RAW" "$HEADERS_FILE"
+  exit 1
+fi
 
 echo "[*] Parsing running and offline nodes..."
 
-jq -r '
+# Decompress the stored gz file for parsing via jq
+gzip -dc "$GZ_FILE" | jq -r '
   .relays[] | 
   (.running // false) as $running |
   (.flags | index("Exit") != null) as $is_exit |
@@ -31,9 +67,7 @@ jq -r '
   else
     empty
   end
-' onionoo_raw.json > parsed_ips.tmp
-
-rm -f onionoo_raw.json
+' > parsed_ips.tmp
 
 # --- ONLINE LISTS ---
 awk '$1=="v4" && $2=="true" {print $4}' parsed_ips.tmp | sort -u > "${PREFIX}relays_v4.txt"
@@ -61,7 +95,7 @@ sort -u "${PREFIX}offline_relays_v4.txt" "${PREFIX}offline_relays_v6.txt" > "${P
 sort -u "${PREFIX}offline_exits_v4.txt" "${PREFIX}offline_exits_v6.txt" > "${PREFIX}offline_exits.txt"
 sort -u "${PREFIX}offline_non_exits_v4.txt" "${PREFIX}offline_non_exits_v6.txt" > "${PREFIX}offline_non_exits.txt"
 
-rm -f parsed_ips.tmp
+rm -f parsed_ips.tmp "$TEMP_RAW"
 
 echo "[*] Generating README.md stats..."
 
