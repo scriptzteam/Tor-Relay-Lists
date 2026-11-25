@@ -2,12 +2,18 @@
 set -euo pipefail
 
 ONIONOO_URL="https://onionoo.torproject.org/details"
-OUT_DIR=""
+OUT_DIR="" # Empty means repository root
 
-mkdir -p "$OUT_DIR"
+# Only run mkdir if OUT_DIR is explicitly defined and not empty
+if [ -n "$OUT_DIR" ]; then
+  mkdir -p "$OUT_DIR"
+  PREFIX="$OUT_DIR/"
+else
+  PREFIX=""
+fi
 
 echo "[*] Downloading Onionoo details..."
-curl -sL "$ONIONOO_URL" | tee >(gzip -9 > "$OUT_DIR/onionoo_details.json.gz") > onionoo_raw.json
+curl -sL "$ONIONOO_URL" | tee >(gzip -9 > "${PREFIX}onionoo_details.json.gz") > onionoo_raw.json
 
 echo "[*] Parsing running nodes..."
 
@@ -28,36 +34,31 @@ jq -r '
 rm -f onionoo_raw.json
 
 # Sort and write lists
-awk '$1=="v4" {print $3}' parsed_ips.tmp | sort -u > "$OUT_DIR/relays_v4.txt"
-awk '$1=="v4" && $2=="true" {print $3}' parsed_ips.tmp | sort -u > "$OUT_DIR/exits_v4.txt"
+awk '$1=="v4" {print $3}' parsed_ips.tmp | sort -u > "${PREFIX}relays_v4.txt"
+awk '$1=="v4" && $2=="true" {print $3}' parsed_ips.tmp | sort -u > "${PREFIX}exits_v4.txt"
 
-awk '$1=="v6" {print $3}' parsed_ips.tmp | sort -u > "$OUT_DIR/relays_v6.txt"
-awk '$1=="v6" && $2=="true" {print $3}' parsed_ips.tmp | sort -u > "$OUT_DIR/exits_v6.txt"
+awk '$1=="v6" {print $3}' parsed_ips.tmp | sort -u > "${PREFIX}relays_v6.txt"
+awk '$1=="v6" && $2=="true" {print $3}' parsed_ips.tmp | sort -u > "${PREFIX}exits_v6.txt"
 
-sort -u "$OUT_DIR/relays_v4.txt" "$OUT_DIR/relays_v6.txt" > "$OUT_DIR/relays.txt"
-sort -u "$OUT_DIR/exits_v4.txt" "$OUT_DIR/exits_v6.txt" > "$OUT_DIR/exits.txt"
+sort -u "${PREFIX}relays_v4.txt" "${PREFIX}relays_v6.txt" > "${PREFIX}relays.txt"
+sort -u "${PREFIX}exits_v4.txt" "${PREFIX}exits_v6.txt" > "${PREFIX}exits.txt"
 
 rm -f parsed_ips.tmp
 
 echo "[*] Generating README.md stats..."
 
-# Count lines (IPs) for each file
-COUNT_RELAYS=$(wc -l < "$OUT_DIR/relays.txt" | tr -d ' ')
-COUNT_RELAYS_V4=$(wc -l < "$OUT_DIR/relays_v4.txt" | tr -d ' ')
-COUNT_RELAYS_V6=$(wc -l < "$OUT_DIR/relays_v6.txt" | tr -d ' ')
-COUNT_EXITS=$(wc -l < "$OUT_DIR/exits.txt" | tr -d ' ')
-COUNT_EXITS_V4=$(wc -l < "$OUT_DIR/exits_v4.txt" | tr -d ' ')
-COUNT_EXITS_V6=$(wc -l < "$OUT_DIR/exits_v6.txt" | tr -d ' ')
+COUNT_RELAYS=$(wc -l < "${PREFIX}relays.txt" | tr -d ' ')
+COUNT_RELAYS_V4=$(wc -l < "${PREFIX}relays_v4.txt" | tr -d ' ')
+COUNT_RELAYS_V6=$(wc -l < "${PREFIX}relays_v6.txt" | tr -d ' ')
+COUNT_EXITS=$(wc -l < "${PREFIX}exits.txt" | tr -d ' ')
+COUNT_EXITS_V4=$(wc -l < "${PREFIX}exits_v4.txt" | tr -d ' ')
+COUNT_EXITS_V6=$(wc -l < "${PREFIX}exits_v6.txt" | tr -d ' ')
 
-# Get human-readable and exact sizes for the compressed archive
-GZ_SIZE_HR=$(du -h "$OUT_DIR/onionoo_details.json.gz" | awk '{print $1}')
-GZ_SIZE_BYTES=$(wc -c < "$OUT_DIR/onionoo_details.json.gz" | tr -d ' ')
-
-# Get current UTC timestamp
+GZ_SIZE_HR=$(du -h "${PREFIX}onionoo_details.json.gz" | awk '{print $1}')
+GZ_SIZE_BYTES=$(wc -c < "${PREFIX}onionoo_details.json.gz" | tr -d ' ')
 TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-# Write out the README.md
-cat << EOF > "$OUT_DIR/README.md"
+cat << EOF > "${PREFIX}README.md"
 # Tor Relay & Exit Node Lists
 
 Automatically generated and updated list of online Tor network relay and exit node IP addresses parsed directly from the official [Tor Onionoo API](https://onionoo.torproject.org/).
@@ -79,11 +80,9 @@ Automatically generated and updated list of online Tor network relay and exit no
 
 ## 🛠️ Usage Example
 
-You can easily feed these lists into firewall rules, threat intelligence pipelines, or log analysis tools. For example, to check if an IP is a known Tor exit node:
-
 \`\`\`bash
 grep -Fxq "192.0.2.1" exits.txt && echo "Matched Tor Exit!"
 \`\`\`
 EOF
 
-echo "[+] Success! Files and README.md generated in '$OUT_DIR/'."
+echo "[+] Success! Files and README.md generated in repository root."
