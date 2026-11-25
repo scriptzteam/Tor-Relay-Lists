@@ -130,7 +130,7 @@ grep -Fxq "192.0.2.1" non_exits.txt && echo "Matched Tor Non-Exit Relay!"
 \`\`\`
 EOF
 
-# --- STATS.md MAINTENANCE ---
+# --- STATS.md ---
 NEW_STAT_ROW="| $TIMESTAMP | $COUNT_RELAYS | $COUNT_RELAYS_V4 | $COUNT_RELAYS_V6 | $COUNT_EXITS | $COUNT_EXITS_V4 | $COUNT_EXITS_V6 | $COUNT_NON_EXITS | $COUNT_NON_EXITS_V4 | $COUNT_NON_EXITS_V6 | $COUNT_OFFLINE_RELAYS | $COUNT_OFFLINE_RELAYS_V4 | $COUNT_OFFLINE_RELAYS_V6 | $COUNT_OFFLINE_EXITS | $COUNT_OFFLINE_EXITS_V4 | $COUNT_OFFLINE_EXITS_V6 | $COUNT_OFFLINE_NON_EXITS | $COUNT_OFFLINE_NON_EXITS_V4 | $COUNT_OFFLINE_NON_EXITS_V6 |"
 
 if [ ! -f "$STATS_MD" ]; then
@@ -145,7 +145,11 @@ $NEW_STAT_ROW
 EOF
 else
   awk -v new_row="$NEW_STAT_ROW" '
-    NR==6 {print new_row}
+    /\| :---/ {
+      print
+      print new_row
+      next
+    }
     {print}
   ' "$STATS_MD" > stats_tmp.md && mv stats_tmp.md "$STATS_MD"
 fi
