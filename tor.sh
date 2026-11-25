@@ -11,6 +11,8 @@ else
   PREFIX=""
 fi
 
+STATS_MD="${PREFIX}STATS.md"
+
 echo "[*] Downloading Onionoo details..."
 curl -sL "$ONIONOO_URL" | tee >(gzip -9 > "${PREFIX}onionoo_details.json.gz") > onionoo_raw.json
 
@@ -128,4 +130,24 @@ grep -Fxq "192.0.2.1" non_exits.txt && echo "Matched Tor Non-Exit Relay!"
 \`\`\`
 EOF
 
-echo "[+] Success! Non-exit lists and README.md generated."
+# --- STATS.md MAINTENANCE ---
+NEW_STAT_ROW="| $TIMESTAMP | $COUNT_RELAYS | $COUNT_RELAYS_V4 | $COUNT_RELAYS_V6 | $COUNT_EXITS | $COUNT_EXITS_V4 | $COUNT_EXITS_V6 | $COUNT_NON_EXITS | $COUNT_NON_EXITS_V4 | $COUNT_NON_EXITS_V6 | $COUNT_OFFLINE_RELAYS | $COUNT_OFFLINE_RELAYS_V4 | $COUNT_OFFLINE_RELAYS_V6 | $COUNT_OFFLINE_EXITS | $COUNT_OFFLINE_EXITS_V4 | $COUNT_OFFLINE_EXITS_V6 | $COUNT_OFFLINE_NON_EXITS | $COUNT_OFFLINE_NON_EXITS_V4 | $COUNT_OFFLINE_NON_EXITS_V6 |"
+
+if [ ! -f "$STATS_MD" ]; then
+  cat << EOF > "$STATS_MD"
+# Historical Tor Network Statistics
+
+Log of historical IP counts for all generated text lists recorded during every automated update cycle.
+
+| Timestamp (UTC) | Relays | Relays v4 | Relays v6 | Exits | Exits v4 | Exits v6 | Non-Exits | Non-Exits v4 | Non-Exits v6 | Off Relays | Off Relays v4 | Off Relays v6 | Off Exits | Off Exits v4 | Off Exits v6 | Off Non-Exits | Off Non-Exits v4 | Off Non-Exits v6 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+$NEW_STAT_ROW
+EOF
+else
+  awk -v new_row="$NEW_STAT_ROW" '
+    NR==4 {print new_row}
+    {print}
+  ' "$STATS_MD" > stats_tmp.md && mv stats_tmp.md "$STATS_MD"
+fi
+
+echo "[+] Success! Non-exit lists, README.md, and STATS.md generated."
