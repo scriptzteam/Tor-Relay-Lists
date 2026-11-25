@@ -2,7 +2,7 @@
 
 Automatically generated and updated list of online and offline Tor network relay, exit, and non-exit node IP addresses parsed directly from the official [Tor Onionoo API](https://onionoo.torproject.org/).
 
-- **Last Updated:** 2026-11-25 10:00:02 UTC
+- **Last Updated:** 2026-11-25 10:02:25 UTC
 - **Raw Archive Size:** 36M (`37712399` bytes)
 
 ## 📊 Node Statistics
